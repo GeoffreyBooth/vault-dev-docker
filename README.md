@@ -1,7 +1,6 @@
 # Vault Development Docker Image
 
-Docker image based on upstream official Vault image which allows pre-populating with
-secrets for local development/testing. DO NOT USE FOR PRODUCTION PURPOSES.
+Docker image based on upstream official Vault image which allows pre-populating with secrets for local development/testing. DO NOT USE FOR PRODUCTION PURPOSES.
 
 Secrets
 -------
@@ -22,21 +21,30 @@ The format is an object associating a path with value, as follows:
 }
 ```
 
-If you see errors in your Vault client about `Invalid path for a versioned K/V secrets engine`, set the `vault-dev` container `VAULT_USE_V1_API` environment variable to `secret`. This [recreates](https://stackoverflow.com/a/49903604/223225) the `/secret` engine using v1 of the Vault API.
+If you see errors in your Vault client about `Invalid path for a versioned K/V secrets engine`, set the `vault-dev` container `VAULT_USE_V1_API` environment variable to `secret`. This [recreates](https://stackoverflow.com/a/49903604/223225) the `/secret` engine using v1 of the Vault API. Here’s example usage in `docker-compose.yml`:
+
+```yaml
+  vault:
+    image: geoffreybooth/vault-dev
+    volumes:
+      - ./secrets.json:/opt/secrets.json
+    environment:
+      VAULT_USE_V1_API: secret
+    ports:
+      - '8200:8200'
+```
 
 Backends
 --------
 
-The following backends can be enabled by setting the appropriate
-environment variable to `1`:
+The following backends can be enabled by setting the appropriate environment variable to `1`:
+
 - App ID: `$VAULT_USE_APP_ID`
 
 App ID
 ------
 
-If the app ID backend is enabled, app ID profiles can be created by
-setting the file at `/opt/app-id.json` (override with
-`$VAULT_APP_ID_FILE`) as follows:
+If the app ID backend is enabled, app ID profiles can be created by setting the file at `/opt/app-id.json` (override with `$VAULT_APP_ID_FILE`) as follows:
 
 ```json
 [
@@ -62,8 +70,7 @@ setting the file at `/opt/app-id.json` (override with
 Policies
 --------
 
-Policies can be created by specifying the file at `/opt/policies.json`
-(override with `$VAULT_POLICIES_FILE`) as follows:
+Policies can be created by specifying the file at `/opt/policies.json` (override with `$VAULT_POLICIES_FILE`) as follows:
 
 ```json
 {
@@ -73,18 +80,22 @@ Policies can be created by specifying the file at `/opt/policies.json`
 
 Healthcheck
 -----------
-The native Docker healthcheck will return healthy when all configured secrets have been
-written.
+The native Docker healthcheck will return healthy when all configured secrets have been written.
 
 Authentication
 --------------
 
 The upstream vault image is mostly unmodified so it runs Vault in development by
-default (no auth necessary) and also respects the environment variable ``VAULT_DEV_ROOT_TOKEN_ID``.
+default (no auth necessary) and also respects the environment variable `VAULT_DEV_ROOT_TOKEN_ID`.
 
 See https://hub.docker.com/_/vault/ for details.
 
 Docker Registry
 ---------------
 
-https://quay.io/dollarshaveclub/vault-dev
+https://hub.docker.com/r/geoffreybooth/vault-dev/
+
+Source
+------
+
+Forked from [https://github.com/dollarshaveclub/vault-dev-docker](https://github.com/dollarshaveclub/vault-dev-docker)
