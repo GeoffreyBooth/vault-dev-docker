@@ -26,7 +26,8 @@ vault server \
 
 # end copypasta
 
-sleep 1 # wait for Vault to come up
+# Poll until Vault is ready
+for i in {1..10}; do (vault status) > /dev/null 2>&1 && break || if [ "$i" -lt 11 ]; then sleep $((i * 2)); else echo 'Timeout waiting for Vault to be ready' && exit 1; fi; done
 
 # use the v1 version of the API if requested; https://stackoverflow.com/a/49903604/223225
 if [ -n "$VAULT_USE_V1_API" ]; then
@@ -54,17 +55,17 @@ fi
 if [ -n "$VAULT_USE_APP_ID" ]; then
   vault auth-enable app-id
   if [[ -f "$VAULT_APP_ID_FILE" ]]; then
-  	for appID in $(jq -rc '.[]' < "$VAULT_APP_ID_FILE"); do
-	    name=$(echo "$appID" | jq -r ".name")
-	    policy=$(echo "$appID" | jq -r ".policy")
-	    echo "creating AppID policy with app ID $name for policy $policy"
-	    vault write auth/app-id/map/app-id/$name value=$policy display_name=$name
+    for appID in $(jq -rc '.[]' < "$VAULT_APP_ID_FILE"); do
+      name=$(echo "$appID" | jq -r ".name")
+      policy=$(echo "$appID" | jq -r ".policy")
+      echo "creating AppID policy with app ID $name for policy $policy"
+      vault write auth/app-id/map/app-id/$name value=$policy display_name=$name
       for userID in $(echo "$appID" | jq -r ".user_ids[]"); do
         name=$(echo "$appID" | jq -r ".name")
         echo "...creating user ID $userID for AppID $name"
         vault write auth/app-id/map/user-id/${userID} value=${name}
       done
-  	done
+    done
   else
     echo "$VAULT_APP_ID_FILE not found, skipping"
   fi
@@ -73,10 +74,10 @@ fi
 # Create any policies.
 if [[ -f "$VAULT_POLICIES_FILE" ]]; then
   for policy in $(jq -r 'keys[]' < "$VAULT_POLICIES_FILE"); do
-  	jq -rj ".\"${policy}\"" < "$VAULT_POLICIES_FILE" > /tmp/value
-  	echo "creating vault policy $policy"
-  	vault policy-write "${policy}" /tmp/value
-  	rm -f /tmp/value
+    jq -rj ".\"${policy}\"" < "$VAULT_POLICIES_FILE" > /tmp/value
+    echo "creating vault policy $policy"
+    vault policy-write "${policy}" /tmp/value
+    rm -f /tmp/value
   done
 else
   echo "$VAULT_POLICIES_FILE not found, skipping"
@@ -84,6 +85,8 @@ fi
 
 # docker healthcheck
 touch /opt/healthcheck
+
+echo 'Vault server is listening...'
 
 # block forever
 tail -f /dev/null
