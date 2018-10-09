@@ -1,15 +1,17 @@
 # Vault Development Docker Image
 
-Docker image based on upstream official Vault image which allows pre-populating with secrets for local development/testing. DO NOT USE FOR PRODUCTION PURPOSES.
+Docker image based on upstream official Vault image which allows pre-populating with secrets for local development/testing. **DO NOT USE FOR PRODUCTION PURPOSES.**
 
 Secrets
 -------
 
-The JSON file at `/opt/secrets.json` (override with
-`$VAULT_SECRETS_FILE`) will be read and written into the generic
-secret backend on startup.
+On startup, Vault will read secrets from a file or environment variable and write them into the generic secret backend.
 
-The format is an object associating a path with value, as follows:
+If you have your secrets saved in a JSON file, you can pass them in as a volume, e.g. `--volume $PWD/localhost-secrets.json:/opt/secrets.json`. Vault looks for secrets at the path defined by `$VAULT_SECRETS_FILE`, which by default is `/opt/secrets.json`. Override that variable to change where Vault should load the secrets from.
+
+You can also pass secrets in via an environment variable, `$VAULT_SECRETS`. This should be a JSON string. If both the secrets file and the environment variable are present, the file takes precedence.
+
+The contents of the JSON file or environment variable is an object associating a path with value, as follows:
 
 ```json
 {
@@ -44,7 +46,7 @@ The following backends can be enabled by setting the appropriate environment var
 App ID
 ------
 
-If the app ID backend is enabled, app ID profiles can be created by setting the file at `/opt/app-id.json` (override with `$VAULT_APP_ID_FILE`) as follows:
+If the app ID backend is enabled, app ID profiles can be created by setting the file at `/opt/app-id.json` (override path with `$VAULT_APP_ID_FILE`, or set contents to `$VAULT_APP_ID` environment variable as with `$VAULT_SECRETS` above):
 
 ```json
 [
@@ -70,7 +72,7 @@ If the app ID backend is enabled, app ID profiles can be created by setting the 
 Policies
 --------
 
-Policies can be created by specifying the file at `/opt/policies.json` (override with `$VAULT_POLICIES_FILE`) as follows:
+Policies can be created by specifying the file at `/opt/policies.json` (override path with `$VAULT_POLICIES_FILE`, or set contents to `$VAULT_POLICIES` environment variable as with `$VAULT_SECRETS` above) as follows:
 
 ```json
 {

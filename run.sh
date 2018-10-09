@@ -12,6 +12,18 @@ VAULT_SECRETS_FILE=${VAULT_SECRETS_FILE:-"/opt/secrets.json"}
 VAULT_APP_ID_FILE=${VAULT_APP_ID_FILE:-"/opt/app-id.json"}
 VAULT_POLICIES_FILE=${VAULT_POLICIES_FILE:-"/opt/policies.json"}
 
+# If environment variables are set containing the above data, and the files
+# are missing, write the environment variables data out to the files
+if [ -n "${VAULT_SECRETS+1}" ] && [[ ! -f "$VAULT_SECRETS_FILE" ]]; then
+  echo "$VAULT_SECRETS" >> "$VAULT_SECRETS_FILE"
+fi
+if [ -n "${VAULT_APP_ID+1}" ] && [[ ! -f "$VAULT_APP_ID_FILE" ]]; then
+  echo "$VAULT_APP_ID" >> "$VAULT_APP_ID_FILE"
+fi
+if [ -n "${VAULT_POLICIES+1}" ] && [[ ! -f "$VAULT_POLICIES_FILE" ]]; then
+  echo "$VAULT_POLICIES" >> "$VAULT_POLICIES_FILE"
+fi
+
 # You can also set the VAULT_LOCAL_CONFIG environment variable to pass some
 # Vault configuration JSON without having to bind any volumes.
 if [ -n "$VAULT_LOCAL_CONFIG" ]; then
