@@ -56,7 +56,7 @@ if [[ -f "$VAULT_SECRETS_FILE" ]]; then
     if [ $type = 'object' ] || [ $type = 'array' ]; then
       echo "$value" | vault write "${path}" -
     else
-      echo "$value" | vault write "${path}" value=-
+      vault write "${path}" "value=${value}"
     fi
   done
 else
